@@ -1,1 +1,1 @@
-from flappy-env.envs.flappy_env import FlappyEnv
+from flappy_env.envs.flappy_env import FlappyEnv
