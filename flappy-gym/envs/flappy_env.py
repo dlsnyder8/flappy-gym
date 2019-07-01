@@ -18,14 +18,14 @@ class FlappyEnv(gym.Env):
         self.font = pygame.font.Font("score_font.ttf", 50)
 
         # game images and sounds
-        self.bg = pygame.image.load('bg.png').convert()
-        self.char = pygame.image.load('flappy.png').convert()
-        self.ground = pygame.image.load('ground.png')
-        self.bottom_pipe = pygame.image.load('pipemain2 copy.png').convert()
+        self.bg = pygame.image.load('bg copy.png').convert()
+        self.char = pygame.image.load('flappy copy.png').convert()
+        self.ground = pygame.image.load('ground copy.png')
+        self.bottom_pipe = pygame.image.load('pipemain2 copy 2.png').convert()
         self.top_pipe = pygame.transform.rotate(bottom_pipe, 180)
-        self.flap_sound = pygame.mixer.Sound('Flapsound.wav')
-        self.point_sound = pygame.mixer.Sound('point.wav')
-        self.hit_sound = pygame.mixer.Sound('hit.wav')
+        self.flap_sound = pygame.mixer.Sound('Flapsound copy.wav')
+        self.point_sound = pygame.mixer.Sound('point copy.wav')
+        self.hit_sound = pygame.mixer.Sound('hit copy.wav')
 
         clock = pygame.time.Clock()
         self.pipe_width = self.bottom_pipe.get_rect().width
@@ -37,10 +37,11 @@ class FlappyEnv(gym.Env):
 
         # actions and observation space (not 100% sure what these are for yet)
         self.action_space = spaces.Discrete(2)
-        self.observation_space = spaces.Box(low=0, high=255, shape=(self.screenheight, self.screenwidth, 3), dtype=np.uint8)
+        self.observation_space = spaces.Box(low=0, high=255, shape=(self.display_height, self.display_width, 3), dtype=np.uint8)
 
     # Bird Class
     class Bird(object):
+
         def __init__(self, x, y):
             self.x = x
             self.y = y
