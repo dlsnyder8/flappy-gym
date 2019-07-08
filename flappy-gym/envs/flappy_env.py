@@ -32,49 +32,59 @@ char_height = char.get_rect().height
 pipe_separation = 140
 AIRTIME = 4
 
-point_received_1 = False
-point_received_2 = False
-
-
-# Bird Class
-class Bird(object):
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-        self.hitbox = (self.x, self.y, self.char_width, self.char_height)
-
-    def dist_from_pipe(self):
-        pipe, pipe2 = FlappyEnv.pipe_return()
-        if point_received_2:
-            return pipe.x - self.x
-        elif point_received_1:
-            return pipe2.x - self.x
-
-
-# Pipe Class
-class Pipe(object):
-    def __init__(self, x):
-        self.x = x
-        self.bottom_disp = random.randint(0, 110)
-        self.top_of_bottom = self.display_height - self.pipe_height + 70 - self.bottom_disp
-        self.hitboxbot = (self.x, self.top_of_bottom, self.pipe_width, self.pipe_height)
-        self.hitboxtop = (self.x, 0, self.pipe_width, self.top_of_bottom - self.pipe_separation - self.pipe_height)
-
-    # draws two pipe in the same y-plane
-    def draw(self, win):
-        win.blit(self.bottom_pipe, (self.x, self.top_of_bottom))
-        win.blit(self.top_pipe, (self.x, self.top_of_bottom - self.pipe_separation - self.pipe_height))
-        self.x -= 2
-        self.hitboxbot = (self.x, self.top_of_bottom, self.pipe_width, self.pipe_height)
-        self.hitboxtop = (self.x, 0, self.pipe_width, self.top_of_bottom - self.pipe_separation - self.pipe_height)
-
 
 class FlappyEnv(gym.Env):
-    global point_received_1
-    global point_received_2
+    score = 0
+    x = 100  # unchanged
+    y = 300
+    flap = 0
+    # run = True
+    is_flap = False  # true when bird flaps
+    background_position = 0
+    pipe = Pipe(display_width)
+    pipe2 = Pipe(display_width + 169)
+    birdbox = bird(x, y)
+
+    point_received_1 = False
+    point_received_2 = False
+    is_hit = True
+
+    # Bird Class
+    class Bird(object):
+        def __init__(self, x, y):
+            self.x = x
+            self.y = y
+            self.hitbox = (self.x, self.y, self.char_width, self.char_height)
+
+        def dist_from_pipe(self):
+            pipe, pipe2 = FlappyEnv.pipe_return()
+            if point_received_2:
+                return pipe.x - self.x
+            elif point_received_1:
+                return pipe2.x - self.x
+
+    # Pipe Class
+    class Pipe(object):
+        def __init__(self, x):
+            self.x = x
+            self.bottom_disp = random.randint(0, 110)
+            self.top_of_bottom = self.display_height - self.pipe_height + 70 - self.bottom_disp
+            self.hitboxbot = (self.x, self.top_of_bottom, self.pipe_width, self.pipe_height)
+            self.hitboxtop = (self.x, 0, self.pipe_width, self.top_of_bottom - self.pipe_separation - self.pipe_height)
+
+        # draws two pipe in the same y-plane
+        def draw(self, win):
+            win.blit(self.bottom_pipe, (self.x, self.top_of_bottom))
+            win.blit(self.top_pipe, (self.x, self.top_of_bottom - self.pipe_separation - self.pipe_height))
+            self.x -= 2
+            self.hitboxbot = (self.x, self.top_of_bottom, self.pipe_width, self.pipe_height)
+            self.hitboxtop = (self.x, 0, self.pipe_width, self.top_of_bottom - self.pipe_separation - self.pipe_height)
+
+
     metadata = {'render.modes': ['human']}
 
     def __init__(self):
+
         self.score = 0
         self.win = pygame.display.set_mode((display_width, display_height))
         pygame.display.set_caption("Flappy Bird")
@@ -84,42 +94,7 @@ class FlappyEnv(gym.Env):
         self.action_space = spaces.Discrete(2)
         self.observation_space = spaces.Box(low=0, high=255, shape=(self.display_height, self.display_width, 3), dtype=np.uint8)
 
-    @staticmethod
-    def pipe_return():
-        return pipe, pipe2
-
     def _step(self, action):
-        """
-
-        Parameters
-        ----------
-        action :
-
-        Returns
-        -------
-        ob, reward, episode_over, info : tuple
-            ob (object) :
-                an environment-specific object representing your observation of
-                the environment.
-            reward (float) :
-                amount of reward achieved by the previous action. The scale
-                varies between environments, but the goal is always to increase
-                your total reward.
-            episode_over (bool) :
-                whether it's time to reset the environment again. Most (but not
-                all) tasks are divided up into well-defined episodes, and done
-                being True indicates the episode has terminated. (For example,
-                perhaps the pole tipped too far, or you lost your last life.)
-            info (dict) :
-                 diagnostic information useful for debugging. It can sometimes
-                 be useful for learning (for example, it might contain the raw
-                 probabilities behind the environment's last state change).
-                 However, official evaluations of your agent are not allowed to
-                 use this for learning.
-        """
-
-
-
         global char
         pygame.event.pump()
         reward = 0.25  # standard reward given for every step
@@ -235,25 +210,29 @@ class FlappyEnv(gym.Env):
         return screenshot_image_data, reward, terminal, {}
         # display_score(score)
 
+    @staticmethod
+    def pipe_return():
+        return pipe, pipe2
 
-    def _reset(self):
-        self.score = 0
-        self.x = 100 # unchanged
-        self.y = 300
-        self.flap = 0
+    @staticmethod
+    def _reset():
+        score = 0
+        x = 100  # unchanged
+        y = 300
+        flap = 0
         # run = True
-        self.is_flap = False  # true when bird flaps
+        is_flap = False  # true when bird flaps
 
-        self.background_position = 0
-        self.pipe = Pipe(display_width)
-        self.pipe2 = Pipe(display_width + 169)
-        self.birdbox = bird(self.x, self.y)
+        background_position = 0
+        pipe = Pipe(display_width)
+        pipe2 = Pipe(display_width + 169)
+        birdbox = bird(x, y)
 
         point_received_1 = False
         point_received_2 = False
-        self.is_hit = True
+        is_hit = True
 
-        screenshot_image_data,_,_,_ = self.step(0)
+        screenshot_image_data,_,_,_ = step(0)
         return screenshot_image_data
 
     def _render(self, mode='human', close=False):
