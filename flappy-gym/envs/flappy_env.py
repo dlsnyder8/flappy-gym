@@ -32,6 +32,9 @@ char_height = char.get_rect().height
 pipe_separation = 140
 AIRTIME = 4
 
+point_received_1 = False
+point_received_2 = False
+
 
 # Bird Class
 class Bird(object):
@@ -39,6 +42,14 @@ class Bird(object):
         self.x = x
         self.y = y
         self.hitbox = (self.x, self.y, self.char_width, self.char_height)
+
+    def dist_from_pipe(self):
+        pipe, pipe2 = FlappyEnv.pipe_return()
+        if point_received_2:
+            return pipe.x - self.x
+        elif point_received_1:
+            return pipe2.x - self.x
+
 
 # Pipe Class
 class Pipe(object):
@@ -59,7 +70,8 @@ class Pipe(object):
 
 
 class FlappyEnv(gym.Env):
-
+    global point_received_1
+    global point_received_2
     metadata = {'render.modes': ['human']}
 
     def __init__(self):
@@ -72,6 +84,9 @@ class FlappyEnv(gym.Env):
         self.action_space = spaces.Discrete(2)
         self.observation_space = spaces.Box(low=0, high=255, shape=(self.display_height, self.display_width, 3), dtype=np.uint8)
 
+    @staticmethod
+    def pipe_return():
+        return pipe, pipe2
 
     def _step(self, action):
         """
@@ -102,6 +117,9 @@ class FlappyEnv(gym.Env):
                  However, official evaluations of your agent are not allowed to
                  use this for learning.
         """
+
+
+
         global char
         pygame.event.pump()
         reward = 0.25  # standard reward given for every step
@@ -163,20 +181,20 @@ class FlappyEnv(gym.Env):
             self.pipe2.draw(win)
             if 98 <= pipe.x + pipe_width <= x and point_received_1 == False:
                 # point_sound.play()
-                self.point_received_1 == True
+                point_received_1 == True
                 self.score += 1
                 reward = 1      # reward for passing pipes
             if 98 < pipe2.x + pipe_width <= x and point_received_2 == False:
                 # point_sound.play()
-                self.point_received_2 == True
+                point_received_2 == True
                 self.score += 1
                 reward = 1      # reward for passing pipes
             if pipe.x < 0 - pipe_width:
                 self.pipe = Pipe(288)
-                self.point_received_1 = False
+                point_received_1 = False
             if pipe2.x < 0 - pipe_width:
                 self.pipe2 = Pipe(288)
-                self.point_received_2 = False
+                point_received_2 = False
 
             # scrolling ground
             win.blit(ground, (relative_x - ground.get_rect().width, display_height - ground_height))
@@ -231,8 +249,8 @@ class FlappyEnv(gym.Env):
         self.pipe2 = Pipe(display_width + 169)
         self.birdbox = bird(self.x, self.y)
 
-        self.point_received_1 = False
-        self.point_received_2 = False
+        point_received_1 = False
+        point_received_2 = False
         self.is_hit = True
 
         screenshot_image_data,_,_,_ = self.step(0)
