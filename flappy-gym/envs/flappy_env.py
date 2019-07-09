@@ -185,7 +185,7 @@ class FlappyEnv(gym.Env):
             if relative_x < display_width:
                 self.win.blit(ground, (relative_x, display_height - ground_height))
 
-            #display_score(score)
+            # display_score(score)
             self.win.blit(char, (x, y))
             birdbox = bird(x, y)
 
@@ -243,7 +243,7 @@ class FlappyEnv(gym.Env):
         background_position = 0
         pipe = Pipe(display_width)
         pipe2 = Pipe(display_width + 169)
-        birdbox = bird(x, y)
+        birdbox = Bird(x, y)
 
         point_received_1 = False
         point_received_2 = False
