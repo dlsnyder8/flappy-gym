@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../Flappy_Bird_ML/.idea/Flappy_Bird_ML.iml" filepath="$PROJECT_DIR$/../Flappy_Bird_ML/.idea/Flappy_Bird_ML.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/flappy-gym.iml" filepath="$PROJECT_DIR$/.idea/flappy-gym.iml" />
     </modules>
   </component>

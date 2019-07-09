@@ -22,16 +22,16 @@ flap_sound = pygame.mixer.Sound('Flapsound copy.wav')
 point_sound = pygame.mixer.Sound('point copy.wav')
 hit_sound = pygame.mixer.Sound('hit copy.wav')
 clock = pygame.time.Clock()
-
 # other variables
 pipe_width = bottom_pipe.get_rect().width
 pipe_height = bottom_pipe.get_rect().height()
 ground_height = ground.get_rect().height
+ground_width = ground.get_rect().width
 char_width = char.get_rect().width
 char_height = char.get_rect().height
+bg_width = bg.get_rect().width
 pipe_separation = 140
 airtime = 4
-
 score = 0
 x = 100  # unchanged
 y = 300
@@ -47,28 +47,35 @@ is_hit = True
 
 
 class Bird(object):
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
+    def __init__(self, x_pos, y_pos):
+        self.x = x_pos
+        self.y = y_pos
         self.hitbox = (self.x, self.y, self.char_width, self.char_height)
 
     def dist_from_pipe(self):
-        pipe, pipe2 = FlappyEnv.pipe_return()
+        pipe_one, pipe_two = FlappyEnv.pipe_return()
         if point_received_2:
-            return pipe.x - self.x
+            return pipe_one.x - self.x
         elif point_received_1:
-            return pipe2.x - self.x
+            return pipe_two.x - self.x
 
 
 # Pipe Class
 class Pipe(object):
-    def __init__(self, x):
-        self.x = x
+    def __init__(self, x_pos):
+        self.x = x_pos
         self.bottom_disp = random.randint(0, 110)
-        self.top_of_bottom = self.display_height - self.pipe_height + 70 - self.bottom_disp
-        self.hitboxbot = (self.x, self.top_of_bottom, self.pipe_width, self.pipe_height)
-        self.hitboxtop = (self.x, 0, self.pipe_width, self.top_of_bottom - self.pipe_separation - self.pipe_height)
+        self.top_of_bottom = display_height - pipe_height + 70 - self.bottom_disp
+        self.hitboxbot = (self.x, self.top_of_bottom, pipe_width, pipe_height)
+        self.hitboxtop = (self.x, 0, pipe_width, self.top_of_bottom - pipe_separation - pipe_height)
 
+    # draws two pipes in the same y-plane
+    def draw(self, win):
+        win.blit(bottom_pipe, (self.x, self.top_of_bottom))
+        win.blit(top_pipe, (self.x, self.top_of_bottom - pipe_separation - pipe_height))
+        self.x -= 2
+        self.hitboxbot = (self.x, self.top_of_bottom, pipe_width, pipe_height)
+        self.hitboxtop = (self.x, 0, pipe_width, self.top_of_bottom - pipe_separation - pipe_height)
 
 pipe = Pipe(display_width)
 pipe2 = Pipe(display_width + 169)
@@ -78,30 +85,26 @@ birdbox = Bird(x, y)
 class FlappyEnv(gym.Env):
 
     def __init__(self):
-        self.score = 0
+
+        # GLOBALIZED VARIABLE(S):
+        global score
+
+        score = 0
         self.win = pygame.display.set_mode((display_width, display_height))
         pygame.display.set_caption("Flappy Bird")
-        self.fps = 30
 
         # actions and observation space
         self.action_space = spaces.Discrete(2)
-        self.observation_space = spaces.Box(low=0, high=255, shape=(self.display_height, self.display_width, 3), dtype=np.uint8)
-
-        # draws two pipe in the same y-plane
-
-    def draw(self, win):
-        win.blit(self.bottom_pipe, (self.x, self.top_of_bottom))
-        win.blit(self.top_pipe, (self.x, self.top_of_bottom - self.pipe_separation - self.pipe_height))
-        self.x -= 2
-        self.hitboxbot = (self.x, self.top_of_bottom, self.pipe_width, self.pipe_height)
-        self.hitboxtop = (self.x, 0, self.pipe_width, self.top_of_bottom - self.pipe_separation - self.pipe_height)
+        self.observation_space = spaces.Box(low=0, high=255, shape=(display_height, display_width, 3), dtype=np.uint8)
 
     metadata = {'render.modes': ['human']}
+    screenshot_image_data = ""
 
     def _step(self, action):
-        global char
-        global point_received_2
-        global point_received_1
+
+        # GLOBALIZED VARIABLE(S):
+        global background_position, char, birdbox, pipe, pipe2, is_flap, flap, y, point_received_1, point_received_2, screenshot_image_data, score
+
         pygame.event.pump()
         reward = 0.25  # standard reward given for every step
         terminal = False
@@ -109,7 +112,7 @@ class FlappyEnv(gym.Env):
         # '0' AS AN ACTION MEANS DO NOTHING
         # '1' AS AN ACTION MEANS FOR THE BIRD TO FLAP
 
-        relative_x = self.background_position % bg.get_rect().width
+        relative_x = background_position % bg_width
 
         # checks for collision
         is_crash = ((pipe.x + pipe_width >= birdbox.x >= pipe.x - 28) and
@@ -118,73 +121,73 @@ class FlappyEnv(gym.Env):
                               (pipe2.x + pipe_width >= birdbox.x >= pipe2.x - 28)
                               and ((birdbox.y + char_height > pipe2.top_of_bottom)
                                    or (birdbox.y < pipe2.top_of_bottom - pipe_separation))) or (
-                              self.y + char_height) > (display_height - ground_height + 10)
+                              y + char_height) > (display_height - ground_height + 10)
 
         if not is_crash:
 
-            if not self.is_flap:
+            if not is_flap:
 
                 if action == 1:
                     flap_sound.play()
-                    self.y -= (airtime ** 2)
-                    self.is_flap = True
-                    self.flap += 1
+                    y -= (airtime ** 2)
+                    is_flap = True
+                    flap += 1
                     char = pygame.transform.rotate(pygame.image.load('upflap.png'), 20)
 
             else:
-                if self.flap < 8:
-                    self.y -= (airtime ** 2)
-                    self.flap += 1
+                if flap < 8:
+                    y -= (airtime ** 2)
+                    flap += 1
                     char = pygame.transform.rotate(pygame.image.load('midflap.png'), 15)
 
-                elif 7 < self.flap < 13:
-                    self.flap += 1
+                elif 7 < flap < 13:
+                    flap += 1
                     char = pygame.transform.rotate(pygame.image.load('midflap.png'), -15)
 
-                elif self.flap == 13:
-                    self.is_flap = False
-                    self.flap = 0
+                elif flap == 13:
+                    is_flap = False
+                    flap = 0
                     char = pygame.transform.rotate(pygame.image.load('flappy.png'), -40)
 
-            self.y -= (airtime ** 2) * -0.4
+            y -= (airtime ** 2) * -0.4
 
             # scrolling background
-            relative_x = self.background_position % bg.get_rect().width
-            win.blit(bg, (relative_x - bg.get_rect().width, 0))
-            self.background_position -= 2
+            relative_x = background_position % bg_width
+            self.win.blit(bg, (relative_x - bg_width, 0))
+            background_position -= 2
 
             if relative_x < display_width:
-                relative_x = self.background_position % bg.get_rect().width
-                win.blit(bg, (relative_x, 0))
+                relative_x = background_position % bg_width
+                self.win.blit(bg, (relative_x, 0))
 
             # pipe spawning & score updating
-            self.pipe.draw(win)
-            self.pipe2.draw(win)
+            pipe.draw(self.win)
+            pipe2.draw(self.win)
             if 98 <= pipe.x + pipe_width <= x and point_received_1 == False:
                 # point_sound.play()
-                point_received_1 == True
-                self.score += 1
-                reward = 1      # reward for passing pipes
+                point_received_1 = True
+                score += 1
+                reward = 1      # reward for passing a pipe
             if 98 < pipe2.x + pipe_width <= x and point_received_2 == False:
                 # point_sound.play()
                 point_received_2 = True
-                self.score += 1
-                reward = 1      # reward for passing pipes
+                score += 1
+                reward = 1      # reward for passing a pipe
             if pipe.x < 0 - pipe_width:
-                self.pipe = Pipe(288)
+                pipe = Pipe(288)
                 point_received_1 = False
             if pipe2.x < 0 - pipe_width:
-                self.pipe2 = Pipe(288)
+                pipe2 = Pipe(288)
                 point_received_2 = False
 
             # scrolling ground
-            win.blit(ground, (relative_x - ground.get_rect().width, display_height - ground_height))
+            self.win.blit(ground, (relative_x - ground_width, display_height - ground_height))
             if relative_x < display_width:
-                win.blit(ground, (relative_x, display_height - ground_height))
+                self.win.blit(ground, (relative_x, display_height - ground_height))
 
             #display_score(score)
-            win.blit(char, (self.x, self.y))
-            self.birdbox = bird(self.x, self.y)
+            self.win.blit(char, (x, y))
+            birdbox = bird(x, y)
 
         else:
             terminal = True
@@ -199,18 +202,18 @@ class FlappyEnv(gym.Env):
             # if (y + char_height) > (display_height - ground_height + 10):  # when it hit the ground, crash fxn will be called
             #     crash()
 
-            win.blit(bg, (relative_x - bg.get_rect().width, 0))
+            self.win.blit(bg, (relative_x - bg_width, 0))
 
             if relative_x < display_width:
-                win.blit(bg, (relative_x, 0))
+                self.win.blit(bg, (relative_x, 0))
 
-            win.blit(bottom_pipe, (pipe.x + 2, pipe.top_of_bottom))
-            win.blit(top_pipe, (pipe.x + 2, pipe.top_of_bottom - pipe_separation - pipe_height))
-            win.blit(bottom_pipe, (pipe2.x + 2, pipe2.top_of_bottom))
-            win.blit(top_pipe, (pipe2.x + 2, pipe2.top_of_bottom - pipe_separation - pipe_height))
-            win.blit(ground, (0, display_height - ground_height))
-            win.blit(char, (self.x, self.y))
-            win.blit(ground, (0, display_height - ground_height))
+            self.win.blit(bottom_pipe, (pipe.x + 2, pipe.top_of_bottom))
+            self.win.blit(top_pipe, (pipe.x + 2, pipe.top_of_bottom - pipe_separation - pipe_height))
+            self.win.blit(bottom_pipe, (pipe2.x + 2, pipe2.top_of_bottom))
+            self.win.blit(top_pipe, (pipe2.x + 2, pipe2.top_of_bottom - pipe_separation - pipe_height))
+            self.win.blit(ground, (0, display_height - ground_height))
+            self.win.blit(char, (x, y))
+            self.win.blit(ground, (0, display_height - ground_height))
 
         screenshot_image_data = pygame.surfarray.array3d(pygame.display.get_surface())
         return screenshot_image_data, reward, terminal, {}
@@ -218,10 +221,18 @@ class FlappyEnv(gym.Env):
 
     @staticmethod
     def pipe_return():
+
+        # GLOBALIZED VARIABLE(S):
+        global pipe, pipe2
+
         return pipe, pipe2
 
     @staticmethod
     def _reset():
+
+        # GLOBALIZED VARIABLE(S):
+        global score, x, y, flap, is_flap, background_position, pipe, pipe2, birdbox, point_received_1, point_received_2, is_hit, screenshot_image_data
+
         score = 0
         x = 100  # unchanged
         y = 300
@@ -241,6 +252,7 @@ class FlappyEnv(gym.Env):
         screenshot_image_data,_,_,_ = step(0)
         return screenshot_image_data
 
+    @staticmethod
     def _render(self, mode='human', close=False):
         pygame.display.update()
-        clock.tick(self.fps)
+        clock.tick(30)
