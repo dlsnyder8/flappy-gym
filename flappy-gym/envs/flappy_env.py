@@ -30,61 +30,54 @@ ground_height = ground.get_rect().height
 char_width = char.get_rect().width
 char_height = char.get_rect().height
 pipe_separation = 140
-AIRTIME = 4
+airtime = 4
+
+score = 0
+x = 100  # unchanged
+y = 300
+flap = 0
+# run = True
+is_flap = False  # true when bird flaps
+background_position = 0
+
+
+point_received_1 = False
+point_received_2 = False
+is_hit = True
+
+
+class Bird(object):
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.hitbox = (self.x, self.y, self.char_width, self.char_height)
+
+    def dist_from_pipe(self):
+        pipe, pipe2 = FlappyEnv.pipe_return()
+        if point_received_2:
+            return pipe.x - self.x
+        elif point_received_1:
+            return pipe2.x - self.x
+
+
+# Pipe Class
+class Pipe(object):
+    def __init__(self, x):
+        self.x = x
+        self.bottom_disp = random.randint(0, 110)
+        self.top_of_bottom = self.display_height - self.pipe_height + 70 - self.bottom_disp
+        self.hitboxbot = (self.x, self.top_of_bottom, self.pipe_width, self.pipe_height)
+        self.hitboxtop = (self.x, 0, self.pipe_width, self.top_of_bottom - self.pipe_separation - self.pipe_height)
+
+
+pipe = Pipe(display_width)
+pipe2 = Pipe(display_width + 169)
+birdbox = Bird(x, y)
 
 
 class FlappyEnv(gym.Env):
-    score = 0
-    x = 100  # unchanged
-    y = 300
-    flap = 0
-    # run = True
-    is_flap = False  # true when bird flaps
-    background_position = 0
-    pipe = Pipe(display_width)
-    pipe2 = Pipe(display_width + 169)
-    birdbox = bird(x, y)
-
-    point_received_1 = False
-    point_received_2 = False
-    is_hit = True
-
-    # Bird Class
-    class Bird(object):
-        def __init__(self, x, y):
-            self.x = x
-            self.y = y
-            self.hitbox = (self.x, self.y, self.char_width, self.char_height)
-
-        def dist_from_pipe(self):
-            pipe, pipe2 = FlappyEnv.pipe_return()
-            if point_received_2:
-                return pipe.x - self.x
-            elif point_received_1:
-                return pipe2.x - self.x
-
-    # Pipe Class
-    class Pipe(object):
-        def __init__(self, x):
-            self.x = x
-            self.bottom_disp = random.randint(0, 110)
-            self.top_of_bottom = self.display_height - self.pipe_height + 70 - self.bottom_disp
-            self.hitboxbot = (self.x, self.top_of_bottom, self.pipe_width, self.pipe_height)
-            self.hitboxtop = (self.x, 0, self.pipe_width, self.top_of_bottom - self.pipe_separation - self.pipe_height)
-
-        # draws two pipe in the same y-plane
-        def draw(self, win):
-            win.blit(self.bottom_pipe, (self.x, self.top_of_bottom))
-            win.blit(self.top_pipe, (self.x, self.top_of_bottom - self.pipe_separation - self.pipe_height))
-            self.x -= 2
-            self.hitboxbot = (self.x, self.top_of_bottom, self.pipe_width, self.pipe_height)
-            self.hitboxtop = (self.x, 0, self.pipe_width, self.top_of_bottom - self.pipe_separation - self.pipe_height)
-
-
-    metadata = {'render.modes': ['human']}
 
     def __init__(self):
-
         self.score = 0
         self.win = pygame.display.set_mode((display_width, display_height))
         pygame.display.set_caption("Flappy Bird")
@@ -94,8 +87,21 @@ class FlappyEnv(gym.Env):
         self.action_space = spaces.Discrete(2)
         self.observation_space = spaces.Box(low=0, high=255, shape=(self.display_height, self.display_width, 3), dtype=np.uint8)
 
+        # draws two pipe in the same y-plane
+
+    def draw(self, win):
+        win.blit(self.bottom_pipe, (self.x, self.top_of_bottom))
+        win.blit(self.top_pipe, (self.x, self.top_of_bottom - self.pipe_separation - self.pipe_height))
+        self.x -= 2
+        self.hitboxbot = (self.x, self.top_of_bottom, self.pipe_width, self.pipe_height)
+        self.hitboxtop = (self.x, 0, self.pipe_width, self.top_of_bottom - self.pipe_separation - self.pipe_height)
+
+    metadata = {'render.modes': ['human']}
+
     def _step(self, action):
         global char
+        global point_received_2
+        global point_received_1
         pygame.event.pump()
         reward = 0.25  # standard reward given for every step
         terminal = False
@@ -140,7 +146,7 @@ class FlappyEnv(gym.Env):
                     self.flap = 0
                     char = pygame.transform.rotate(pygame.image.load('flappy.png'), -40)
 
-            self.y -= (AIRTIME ** 2) * -0.4
+            self.y -= (airtime ** 2) * -0.4
 
             # scrolling background
             relative_x = self.background_position % bg.get_rect().width
@@ -161,7 +167,7 @@ class FlappyEnv(gym.Env):
                 reward = 1      # reward for passing pipes
             if 98 < pipe2.x + pipe_width <= x and point_received_2 == False:
                 # point_sound.play()
-                point_received_2 == True
+                point_received_2 = True
                 self.score += 1
                 reward = 1      # reward for passing pipes
             if pipe.x < 0 - pipe_width:
