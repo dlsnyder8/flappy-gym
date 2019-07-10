@@ -213,13 +213,12 @@ class FlappyEnv(gym.Env):
             if is_hit:
                 hit_sound.play()
                 is_hit = False
-            if (y + char_height) > (display_height - ground_height + 10):  # when it hit the ground, crash fxn will be called
+            if (y + char_height) > (display_height - ground_height + 10):  # when hits ground,
                 self.__init__()
                 self._reset()
 
             self.win.blit(bg, (relative_x - bg_width, 0))
-            text = font.render(str(score), 1, (255, 255, 255))
-            self.win.blit(text, (144, 120))
+
             if relative_x < display_width:
                 self.win.blit(bg, (relative_x, 0))
 
