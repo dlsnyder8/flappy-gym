@@ -10,8 +10,7 @@ pygame.init()
 # variables for display
 display_width = 288
 display_height = 512
-win = pygame.display.set_mode((display_width, display_height))
-font = pygame.font.Font("score_font copy.ttf", 50)
+font = pygame.font.Font("score_font.ttf", 50)
 
 # images and sounds
 bg = pygame.image.load('bg copy.png').convert()
@@ -25,7 +24,7 @@ hit_sound = pygame.mixer.Sound('hit copy.wav')
 clock = pygame.time.Clock()
 # other variables
 pipe_width = bottom_pipe.get_rect().width
-pipe_height = bottom_pipe.get_rect().height
+pipe_height = bottom_pipe.get_rect().height()
 ground_height = ground.get_rect().height
 ground_width = ground.get_rect().width
 char_width = char.get_rect().width
@@ -47,6 +46,20 @@ point_received_2 = False
 is_hit = True
 
 
+class Bird(object):
+    def __init__(self, x_pos, y_pos):
+        self.x = x_pos
+        self.y = y_pos
+        self.hitbox = (self.x, self.y, self.char_width, self.char_height)
+
+    def dist_from_pipe(self):
+        pipe_one, pipe_two = FlappyEnv.pipe_return()
+        if point_received_2:
+            return pipe_one.x - self.x
+        elif point_received_1:
+            return pipe_two.x - self.x
+
+
 # Pipe Class
 class Pipe(object):
     def __init__(self, x_pos):
@@ -62,35 +75,10 @@ class Pipe(object):
         win.blit(top_pipe, (self.x, self.top_of_bottom - pipe_separation - pipe_height))
         self.x -= 2
         self.hitboxbot = (self.x, self.top_of_bottom, pipe_width, pipe_height)
-
+        self.hitboxtop = (self.x, 0, pipe_width, self.top_of_bottom - pipe_separation - pipe_height)
 
 pipe = Pipe(display_width)
 pipe2 = Pipe(display_width + 169)
-
-
-class Bird(object):
-    def __init__(self, x_pos, y_pos):
-        self.x = x_pos
-        self.y = y_pos
-        self.hitbox = (self.x, self.y, char_width, char_height)
-
-    # returns the horizontal distances from the fronts(leftmost coordinates) of both pipes to front(leftmost coordinate) of the bird as a list
-    def horizontal_dist_from_pipes(self):
-        # pipe_one, pipe_two = FlappyEnv.pipe_return()
-        # return [pipe_one.x - self.x, pipe_two.x - self.x]
-        if point_received_1:
-            return pipe2.x - self.x
-        else:
-            return pipe.x - self.x
-
-    # returns the vertical distance from the tops of both of the bottom pipes to the top of the bird
-    def vertical_dist_from_pipes(self):
-        if point_received_1:
-            return pipe2.top_of_bottom - self.y
-        else:
-            return pipe.top_of_bottom - self.y
-
-
 birdbox = Bird(x, y)
 
 
@@ -115,7 +103,7 @@ class FlappyEnv(gym.Env):
     def _step(self, action):
 
         # GLOBALIZED VARIABLE(S):
-        global background_position, char, birdbox, pipe, pipe2, is_flap, flap, y, point_received_1, point_received_2, screenshot_image_data, score, is_hit
+        global background_position, char, birdbox, pipe, pipe2, is_flap, flap, y, point_received_1, point_received_2, screenshot_image_data, score
 
         pygame.event.pump()
         reward = 0.25  # standard reward given for every step
@@ -144,22 +132,22 @@ class FlappyEnv(gym.Env):
                     y -= (airtime ** 2)
                     is_flap = True
                     flap += 1
-                    char = pygame.transform.rotate(pygame.image.load('upflap copy.png'), 20)
+                    char = pygame.transform.rotate(pygame.image.load('upflap.png'), 20)
 
             else:
                 if flap < 8:
                     y -= (airtime ** 2)
                     flap += 1
-                    char = pygame.transform.rotate(pygame.image.load('midflap copy.png'), 15)
+                    char = pygame.transform.rotate(pygame.image.load('midflap.png'), 15)
 
                 elif 7 < flap < 13:
                     flap += 1
-                    char = pygame.transform.rotate(pygame.image.load('midflap copy.png'), -15)
+                    char = pygame.transform.rotate(pygame.image.load('midflap.png'), -15)
 
                 elif flap == 13:
                     is_flap = False
                     flap = 0
-                    char = pygame.transform.rotate(pygame.image.load('flappy copy.png'), -40)
+                    char = pygame.transform.rotate(pygame.image.load('flappy.png'), -40)
 
             y -= (airtime ** 2) * -0.4
 
@@ -175,12 +163,12 @@ class FlappyEnv(gym.Env):
             # pipe spawning & score updating
             pipe.draw(self.win)
             pipe2.draw(self.win)
-            if 98 <= pipe.x + pipe_width <= x and point_received_1 is False:
+            if 98 <= pipe.x + pipe_width <= x and point_received_1 == False:
                 # point_sound.play()
                 point_received_1 = True
                 score += 1
                 reward = 1      # reward for passing a pipe
-            if 98 < pipe2.x + pipe_width <= x and point_received_2 is False:
+            if 98 < pipe2.x + pipe_width <= x and point_received_2 == False:
                 # point_sound.play()
                 point_received_2 = True
                 score += 1
@@ -197,29 +185,25 @@ class FlappyEnv(gym.Env):
             if relative_x < display_width:
                 self.win.blit(ground, (relative_x, display_height - ground_height))
 
-            text = font.render(str(score), 1, (255, 255, 255))
-            win.blit(text, (144, 120))
+            # display_score(score)
             self.win.blit(char, (x, y))
-            birdbox = Bird(x, y)
+            birdbox = bird(x, y)
 
         else:
             terminal = True
-            y -= (airtime ** 2) * -0.4  # falling after crash
+            # y -= (AIRTIME ** 2) * -0.4  # falling after crash
             self.__init__()
-            self._reset()       # THESE TWO LINES (AND THE TWO LINES OF CODE 8 lines down) restart the loop 
             reward = -1  # negative rewards for crashing
 
             # makes sure the hit sound doesn't keep playing
-            if is_hit:
-                hit_sound.play()
-                is_hit = False
-            if (y + char_height) > (display_height - ground_height + 10):  # when it hit the ground, crash fxn will be called
-                self.__init__()
-                self._reset()
+            # if is_hit:
+            #     hit_sound.play()
+            #     self.is_hit = False
+            # if (y + char_height) > (display_height - ground_height + 10):  # when it hit the ground, crash fxn will be called
+            #     crash()
 
             self.win.blit(bg, (relative_x - bg_width, 0))
-            text = font.render(str(score), 1, (255, 255, 255))
-            self.win.blit(text, (144, 120))
+
             if relative_x < display_width:
                 self.win.blit(bg, (relative_x, 0))
 
@@ -233,8 +217,7 @@ class FlappyEnv(gym.Env):
 
         screenshot_image_data = pygame.surfarray.array3d(pygame.display.get_surface())
         return screenshot_image_data, reward, terminal, {}
-        text = font.render(str(score), 1, (255, 255, 255))
-        self.win.blit(text, (144, 120))
+        # display_score(score)
 
     @staticmethod
     def pipe_return():
@@ -266,50 +249,10 @@ class FlappyEnv(gym.Env):
         point_received_2 = False
         is_hit = True
 
-        screenshot_image_data, _, _, _ = FlappyEnv._step(flapsy, action=0)
+        screenshot_image_data,_,_,_ = step(0)
         return screenshot_image_data
 
     @staticmethod
     def _render(self, mode='human', close=False):
         pygame.display.update()
         clock.tick(30)
-
-
-# ********************************************* TESTING VARIABLES ******************************************************
-# THINGS THAT WERE TESTED:
-    # pipe class variables(x, top_of_bottom, etc.) and pipe instances(pipe, pipe2), variables defined before the classes
-    # step, init, reset, pipe_return, vert/horiz_dist_to_pipes methods were tested
-    # current test code plays the environment with randomized actions by passing randomly generated values(1 or 0)
-        # to the _step() function
-
-
-flapsy = FlappyEnv()
-FlappyEnv.__init__(flapsy)
-# pipe, pipe2 = flapsy.pipe_return()
-# print(pipe.x)
-# print(pipe2.x)
-# flapsy._reset()
-# print(pipe.x)
-# print(pipe2.x)
-# flapsy._step(1)
-# print(pipe.x)
-# print(pipe2.x)
-
-for i in range(1000):
-    act = random.randint(0, 2)
-    flapsy._step(act)
-    flapsy._render(flapsy)
-    # print(pipe.x)
-    # print(pipe2.x)
-    print(birdbox.horizontal_dist_from_pipes(), birdbox.vertical_dist_from_pipes())
-
-# print(pipe.x)
-# print(pipe.hitboxtop, pipe.hitboxbot)
-# print(pipe2.x)
-# print(pipe2.hitboxtop, pipe2.hitboxbot)
-# print(score)
-
-flapsy._reset()
-print(birdbox.horizontal_dist_from_pipes(), birdbox.vertical_dist_from_pipes())
-print(pipe.x)
-print(pipe2.x)
