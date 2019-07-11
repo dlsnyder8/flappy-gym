@@ -231,7 +231,8 @@ class FlappyEnv(gym.Env):
     def _reset():
 
         # GLOBALIZED VARIABLE(S):
-        global score, x, y, flap, is_flap, background_position, pipe, pipe2, birdbox, point_received_1, point_received_2, is_hit, screenshot_image_data
+        global score, x, y, flap, is_flap, background_position, pipe, pipe2,\
+            birdbox, point_received_1, point_received_2, is_hit, screenshot_image_data
 
         score = 0
         x = 100  # unchanged
