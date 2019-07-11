@@ -112,7 +112,7 @@ class FlappyEnv(gym.Env):
     metadata = {'render.modes': ['human']}
     screenshot_image_data = ""
 
-    def _step(self, action):
+    def step(self, action):
 
         # GLOBALIZED VARIABLE(S):
         global background_position, char, birdbox, pipe, pipe2, is_flap, flap, y, point_received_1, point_received_2, screenshot_image_data, score, is_hit
@@ -206,7 +206,7 @@ class FlappyEnv(gym.Env):
             terminal = True
             y -= (airtime ** 2) * -0.4  # falling after crash
             self.__init__()
-            self._reset()       # THESE TWO LINES (AND THE TWO LINES OF CODE 8 lines down) restart the loop
+            self.reset()       # THESE TWO LINES (AND THE TWO LINES OF CODE 8 lines down) restart the loop
             reward = -1  # negative rewards for crashing
 
             # makes sure the hit sound doesn't keep playing
@@ -244,7 +244,7 @@ class FlappyEnv(gym.Env):
         return pipe, pipe2
 
     @staticmethod
-    def _reset():
+    def reset():
 
         # GLOBALIZED VARIABLE(S):
         global score, x, y, flap, is_flap, background_position, pipe, pipe2,\
@@ -266,11 +266,11 @@ class FlappyEnv(gym.Env):
         point_received_2 = False
         is_hit = True
 
-        screenshot_image_data, _, _, _ = FlappyEnv._step(flapsy, action=0)
+        screenshot_image_data, _, _, _ = FlappyEnv.step(flapsy, action=0)
         return screenshot_image_data
 
     @staticmethod
-    def _render(self, mode='human', close=False):
+    def render():
         pygame.display.update()
         clock.tick(30)
 
@@ -284,7 +284,7 @@ class FlappyEnv(gym.Env):
 
 
 flapsy = FlappyEnv()
-FlappyEnv.__init__(flapsy)
+# FlappyEnv.__init__(flapsy)
 # pipe, pipe2 = flapsy.pipe_return()
 # print(pipe.x)
 # print(pipe2.x)
@@ -297,8 +297,8 @@ FlappyEnv.__init__(flapsy)
 
 for i in range(1000):
     act = random.randint(0, 2)
-    flapsy._step(act)
-    flapsy._render(flapsy)
+    flapsy.step(act)
+    flapsy.render(flapsy)
     # print(pipe.x)
     # print(pipe2.x)
     print(birdbox.horizontal_dist_from_pipes(), birdbox.vertical_dist_from_pipes())
@@ -309,7 +309,7 @@ for i in range(1000):
 # print(pipe2.hitboxtop, pipe2.hitboxbot)
 # print(score)
 
-flapsy._reset()
+flapsy.reset()
 print(birdbox.horizontal_dist_from_pipes(), birdbox.vertical_dist_from_pipes())
 print(pipe.x)
 print(pipe2.x)
