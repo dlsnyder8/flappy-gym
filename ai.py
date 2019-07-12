@@ -45,7 +45,7 @@ while not done:
     # env.action_space.sample()
     new_state, reward, done, _ = env.step(action)
     print(reward)
-    env._render()
+    env.render()
     # new_discrete_state = get_discrete_state(new_state)
     # if not done:
     #     max_future_q = np.max(qtable[:,new_discrete_state])

@@ -1,7 +1,7 @@
 from gym.envs.registration import register
 
 register(
-    id='flappy_gym',
+    id='flappygym-v0',
     entry_point='flappy_gym.envs:FlappyEnv',
 )
 

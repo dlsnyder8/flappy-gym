@@ -4,7 +4,7 @@ from gym.utils import seeding
 import numpy as np
 import random
 import pygame
-import time
+
 
 pygame.init()
 # variables for display
@@ -18,7 +18,7 @@ bg = pygame.image.load('bg copy.png').convert()
 char = pygame.image.load('flappy copy.png').convert()
 ground = pygame.image.load('ground copy.png')
 bottom_pipe = pygame.image.load('pipemain2 copy 2.png').convert()
-top_pipe = pygame.transform.rotate(bottom_pipe, 180)
+top_pipe = pygame.image.load('top.png').convert()
 flap_sound = pygame.mixer.Sound('Flapsound copy.wav')
 point_sound = pygame.mixer.Sound('point copy.wav')
 hit_sound = pygame.mixer.Sound('hit copy.wav')
@@ -243,12 +243,13 @@ class FlappyEnv(gym.Env):
 
         return pipe, pipe2
 
-    @staticmethod
-    def reset():
+    def reset(self):
 
         # GLOBALIZED VARIABLE(S):
         global score, x, y, flap, is_flap, background_position, pipe, pipe2,\
             birdbox, point_received_1, point_received_2, is_hit, screenshot_image_data
+
+        flapsy = FlappyEnv()
 
         score = 0
         x = 100  # unchanged
@@ -269,8 +270,7 @@ class FlappyEnv(gym.Env):
         screenshot_image_data, _, _, _ = FlappyEnv.step(flapsy, action=0)
         return screenshot_image_data
 
-    @staticmethod
-    def render():
+    def render(self):
         pygame.display.update()
         clock.tick(30)
 
@@ -282,34 +282,34 @@ class FlappyEnv(gym.Env):
     # current test code plays the environment with randomized actions by passing randomly generated values(1 or 0)
         # to the _step() function
 
-
-flapsy = FlappyEnv()
-# FlappyEnv.__init__(flapsy)
-# pipe, pipe2 = flapsy.pipe_return()
+#
+# flapsy = FlappyEnv()
+# # FlappyEnv.__init__(flapsy)
+# # pipe, pipe2 = flapsy.pipe_return()
+# # print(pipe.x)
+# # print(pipe2.x)
+# # flapsy._reset()
+# # print(pipe.x)
+# # print(pipe2.x)
+# # flapsy._step(1)
+# # print(pipe.x)
+# # print(pipe2.x)
+#
+# for i in range(1000):
+#     act = random.randint(0, 2)
+#     flapsy.step(act)
+#     flapsy.render(flapsy)
+#     # print(pipe.x)
+#     # print(pipe2.x)
+#     print(birdbox.horizontal_dist_from_pipes(), birdbox.vertical_dist_from_pipes())
+#
+# # print(pipe.x)
+# # print(pipe.hitboxtop, pipe.hitboxbot)
+# # print(pipe2.x)
+# # print(pipe2.hitboxtop, pipe2.hitboxbot)
+# # print(score)
+#
+# flapsy.reset()
+# print(birdbox.horizontal_dist_from_pipes(), birdbox.vertical_dist_from_pipes())
 # print(pipe.x)
 # print(pipe2.x)
-# flapsy._reset()
-# print(pipe.x)
-# print(pipe2.x)
-# flapsy._step(1)
-# print(pipe.x)
-# print(pipe2.x)
-
-for i in range(1000):
-    act = random.randint(0, 2)
-    flapsy.step(act)
-    flapsy.render(flapsy)
-    # print(pipe.x)
-    # print(pipe2.x)
-    print(birdbox.horizontal_dist_from_pipes(), birdbox.vertical_dist_from_pipes())
-
-# print(pipe.x)
-# print(pipe.hitboxtop, pipe.hitboxbot)
-# print(pipe2.x)
-# print(pipe2.hitboxtop, pipe2.hitboxbot)
-# print(score)
-
-flapsy.reset()
-print(birdbox.horizontal_dist_from_pipes(), birdbox.vertical_dist_from_pipes())
-print(pipe.x)
-print(pipe2.x)
