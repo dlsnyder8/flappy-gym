@@ -20,21 +20,22 @@ for i in range(EPISODES):
     state = env.reset()
     done = False
     while not done:
-        action = np.argmax(q_table[state])
+        x, y = state
+        action = np.argmax(q_table[int(x)][int(y)])
         new_state, reward, done, _ = env.step(action)
         env.render()
 
         # if simulation didn't end after the previous step, update q-table
         if not done:
-
-            max_future_q = np.max(q_table[new_state])
+            x_new, y_new = new_state
+            max_future_q = np.max(q_table[int(x_new)][int(y_new)])
 
             current_q = q_table[state + (action,)]   # current q-value
-
-            # new q-value using the Q-formula
-            new_q = (1 - LEARNING_RATE) * current_q + LEARNING_RATE * (reward + DISCOUNT * max_future_q)
-
-            q_table[state + (action,)] = new_q   # updates q-table with newly generated q-value
+            #
+            # # new q-value using the Q-formula
+            # new_q = (1 - LEARNING_RATE) * current_q + LEARNING_RATE * (reward + DISCOUNT * max_future_q)
+            #
+            # q_table[state + (action,)] = new_q   # updates q-table with newly generated q-value
 
         # Simulation ended (for any reason) - if goal position is achieved - update Q value with reward directly
         # elif new_state[0] >= env.goal_position:
