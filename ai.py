@@ -3,49 +3,44 @@ from gym import error, spaces, utils
 from gym.utils import seeding
 import random
 import numpy as np
+from random import shuffle
 from flappy_gym.envs.flappy_env import FlappyEnv
 from flappy_gym import envs
 
 env = gym.make('flappygym-v0')
 env.reset()
 
-# LEARNINGRATE= 0.1
-# DISCOUNT = 0.95
-# EPISODES= 2500
-#
-# print(env.observation_space.high)
-# print(env.observation_space.low)
-# print(env.action_space.n)
-#
-#
-# DISCRETE_OS_SIZE =[0]*512
-# discrete_os_win_size = (np.array([512]*512))
-# qtable = np.random.uniform(low = -2, high = 0,size = 30)
-#
-# print(qtable)
+
+LEARNINGRATE = 0.1
+DISCOUNT = 0.95
+EPISODES = 2500
+actions = 2
+
+DISCRETE_OS_SIZE = [20, 20]
+qtable = np.random.uniform(low=-2, high=0, size=(288, 512, 2))  # 285 is highest the pipe can be
+
+
 # def get_discrete_state(state):
-#     discretestate = (state)/ discrete_os_win_size
-#     return tuple(discretestate.astype(np.int))
-#
-#
-# discretestate = (get_discrete_state(env.reset()[100,:,2]))/100
-#
-# print(discretestate)
-#
-# print(np.argmax(qtable[discretestate]))
+#     # discretestate = (state)/ discrete_os_win_size
+#     return qtable[state]
 
 
-
-
-done = False
-
-while not done:
-    action =np.random.randint(0,2)
+for i in range(EPISODES):
+    action = np.random.randint(0, 2)
     # np.argmax(qtable[:,discretestate])
     # env.action_space.sample()
     new_state, reward, done, _ = env.step(action)
-    print(reward)
     env.render()
+
+
+
+
+
+
+
+
+
+
     # new_discrete_state = get_discrete_state(new_state)
     # if not done:
     #     max_future_q = np.max(qtable[:,new_discrete_state])

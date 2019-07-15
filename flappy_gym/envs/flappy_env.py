@@ -231,7 +231,8 @@ class FlappyEnv(gym.Env):
             self.win.blit(ground, (0, display_height - ground_height))
 
         screenshot_image_data = pygame.surfarray.array3d(pygame.display.get_surface())
-        return screenshot_image_data, reward, terminal, {}
+        dist_from_pipes = (birdbox.horizontal_dist_from_pipes(), birdbox.vertical_dist_from_pipes())
+        return dist_from_pipes, reward, terminal, {}
         text = font.render(str(score), 1, (255, 255, 255))
         self.win.blit(text, (144, 120))
 
@@ -267,8 +268,8 @@ class FlappyEnv(gym.Env):
         point_received_2 = False
         is_hit = True
 
-        screenshot_image_data, _, _, _ = FlappyEnv.step(flapsy, action=0)
-        return screenshot_image_data
+        dist_from_pipes = (birdbox.horizontal_dist_from_pipes(), birdbox.vertical_dist_from_pipes())
+        return dist_from_pipes
 
     def render(self):
         pygame.display.update()
